@@ -1,14 +1,20 @@
 package com.amex.giftcard_catalogue.api.model;
 
-import java.util.UUID;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.UuidGenerator;
 
+import java.util.UUID;
+@Entity
+@Table( name = "giftcards")
 public class GiftCard {
 
+    @Id
+    @UuidGenerator(style = UuidGenerator.Style.RANDOM)
     public UUID id;
     public String company_name;
-
     public int value;
-
     public int points_cost;
 
     public GiftCard(UUID id, String company_name, int value, int points_cost) {
@@ -16,6 +22,15 @@ public class GiftCard {
         this.company_name = company_name;
         this.value = value;
         this.points_cost = points_cost;
+    }
+
+    public GiftCard(String company_name, int value, int points_cost) {
+        this.company_name = company_name;
+        this.value = value;
+        this.points_cost = points_cost;
+    }
+
+    public GiftCard(UUID id) {
     }
 
     public UUID getId() {
@@ -50,4 +65,13 @@ public class GiftCard {
         this.points_cost = points_cost;
     }
 
+    @Override
+    public String toString() {
+        return "GiftCard{" +
+                "id=" + id +
+                ", company_name='" + company_name + '\'' +
+                ", value=" + value +
+                ", points_cost=" + points_cost +
+                '}';
+    }
 }
