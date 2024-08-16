@@ -4,6 +4,7 @@ import com.amex.giftcard_catalogue.api.model.GiftCard;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -11,6 +12,17 @@ public class GiftCardService {
 
     public List<GiftCard> getGiftCards() {
         return createGiftCardList();
+    }
+
+    public void GiftCard(GiftCard giftCard){
+        Optional<GiftCard> giftCardOptional;
+        // = giftcardrepository.findGiftCrdById(id);
+        UUID id = giftCard.id;
+
+        if (giftCardOptional.isPresent()) {
+            throw new IllegalStateException("id already exists")
+        }
+        //giftcardrepository.save(student);
     }
 
     private List<GiftCard> createGiftCardList() {

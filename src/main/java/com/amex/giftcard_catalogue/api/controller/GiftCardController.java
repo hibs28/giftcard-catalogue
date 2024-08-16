@@ -3,9 +3,7 @@ package com.amex.giftcard_catalogue.api.controller;
 import com.amex.giftcard_catalogue.api.model.GiftCard;
 import com.amex.giftcard_catalogue.service.GiftCardService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,6 +21,11 @@ public class GiftCardController {
     @GetMapping
     public List<GiftCard> getAll() {
         return giftCardService.getGiftCards();
+    }
+
+    @PostMapping
+    public GiftCard createGiftCard(@RequestBody GiftCard giftCard) {
+        return giftCardService.createGiftCard();
     }
 
 }
