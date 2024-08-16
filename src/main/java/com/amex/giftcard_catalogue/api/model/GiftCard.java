@@ -1,5 +1,7 @@
 package com.amex.giftcard_catalogue.api.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -17,6 +19,7 @@ public class GiftCard {
     public int value;
     public int points_cost;
 
+    //GET
     public GiftCard(UUID id, String company_name, int value, int points_cost) {
         this.id = id;
         this.company_name = company_name;
@@ -24,6 +27,7 @@ public class GiftCard {
         this.points_cost = points_cost;
     }
 
+    //POST
     public GiftCard(String company_name, int value, int points_cost) {
         this.company_name = company_name;
         this.value = value;
