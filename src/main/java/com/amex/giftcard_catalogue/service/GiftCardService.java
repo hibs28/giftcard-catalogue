@@ -1,6 +1,8 @@
 package com.amex.giftcard_catalogue.service;
 
+import com.amex.giftcard_catalogue.api.GiftCardRepository;
 import com.amex.giftcard_catalogue.api.model.GiftCard;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,9 +11,15 @@ import java.util.UUID;
 
 @Service
 public class GiftCardService {
+    @Autowired
+    private final GiftCardRepository giftCardRepository;
+
+    public GiftCardService(GiftCardRepository giftCardRepository) {
+        this.giftCardRepository = giftCardRepository;
+    }
 
     public List<GiftCard> getGiftCards() {
-        return createGiftCardList();
+        return giftCardRepository.findAll();
     }
 
     public void GiftCard(GiftCard giftCard){
