@@ -7,7 +7,7 @@ import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
 @Entity
-@Table( name = "giftcards")
+@Table( name = "giftcard")
 public class GiftCard {
 
     @Id
@@ -30,7 +30,7 @@ public class GiftCard {
         this.points_cost = points_cost;
     }
 
-    public GiftCard(UUID id) {
+    public GiftCard() {
     }
 
     public UUID getId() {
