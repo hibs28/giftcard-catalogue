@@ -3,11 +3,11 @@ package com.amex.giftcard_catalogue.service;
 import com.amex.giftcard_catalogue.api.GiftCardRepository;
 import com.amex.giftcard_catalogue.api.model.GiftCard;
 import com.amex.giftcard_catalogue.api.model.GiftCardRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class GiftCardService {
@@ -22,7 +22,7 @@ public class GiftCardService {
         return giftCardRepository.findAll();
     }
 
-    public GiftCard createGiftCard(GiftCardRequest giftCardRequest){
+    public GiftCard createGiftCard(@Valid GiftCardRequest giftCardRequest) throws IllegalStateException {
         GiftCard giftCard = new GiftCard(giftCardRequest.getCompany_name(), giftCardRequest.getValue(), giftCardRequest.getPoints_cost());
 
         return giftCardRepository.save(giftCard);

@@ -1,22 +1,26 @@
 package com.amex.giftcard_catalogue.api.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
+
 @Entity
-@Table( name = "giftcard")
+@Table(name = "giftcard")
 public class GiftCard {
 
     @Id
     @UuidGenerator(style = UuidGenerator.Style.RANDOM)
     public UUID id;
+    @NotBlank
     public String company_name;
+    @NotNull
     public int value;
+    @NotNull
     public int points_cost;
 
     //GET
