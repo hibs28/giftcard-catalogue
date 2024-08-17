@@ -3,11 +3,11 @@ package com.amex.giftcard_catalogue.api.controller;
 import com.amex.giftcard_catalogue.api.model.GiftCard;
 import com.amex.giftcard_catalogue.service.GiftCardService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping(path = "gift_cards")
@@ -23,6 +23,10 @@ public class GiftCardController {
     @GetMapping
     public List<GiftCard> getAll() {
         return giftCardService.getGiftCards();
+    }
+    @DeleteMapping("/{id}")
+    public void removeById(@PathVariable UUID id){
+        giftCardService.removeGiftCard(id);
     }
 
 }

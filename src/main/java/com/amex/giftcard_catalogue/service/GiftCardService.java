@@ -30,4 +30,11 @@ public class GiftCardService {
         );
     }
 
+    public void removeGiftCard(UUID id) {
+        if(!giftCardRepository.existsById(id)) {
+
+            throw new IllegalStateException("Gift Card with id " + id + " does not exist");
+        }
+        giftCardRepository.deleteById(id);
+    }
 }
