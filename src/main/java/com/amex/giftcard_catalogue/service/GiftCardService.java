@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -17,8 +18,15 @@ public class GiftCardService {
         this.giftCardRepository = giftCardRepository;
     }
 
-    public List<GiftCard> getGiftCards() {
-        return giftCardRepository.findAll();
+    public GiftCard getGiftCardById(UUID id) {
+//       return giftCardRepository.getReferenceById(id);
+        return giftCardRepository.findGiftCardById(id).orElseThrow();
+    }
+
+    public GiftCard getGiftCardByValueAndCompanyName(int value, String companyName) {
+        Optional<GiftCard> giftCardOptional =  giftCardRepository.findGiftCardByValueAndCompany(value, companyName);
+        return giftCardOptional.orElseThrow();
+
     }
 
     private List<GiftCard> createGiftCardList() {
