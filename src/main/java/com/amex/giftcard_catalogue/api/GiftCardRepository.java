@@ -4,13 +4,16 @@ import com.amex.giftcard_catalogue.api.model.GiftCard;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface GiftCardRepository extends JpaRepository<GiftCard, UUID> {
-    @Query("select g From GiftCard g where g.id = ?1" )
-     Optional<GiftCard> findGiftCardById(UUID id);
+    boolean existsByCompanyName(String name);
 
-    @Query("select g From GiftCard g where g.value = ?1 and g.company_name = ?2" )
-    Optional<GiftCard> findGiftCardByValueAndCompany(int value, String company_name);
+    @Query("select g From GiftCard g where g.id = ?1")
+    Optional<GiftCard> findGiftCardById(UUID id);
+
+    @Query("select g From GiftCard g where g.value = ?1 and g.companyName = ?2")
+    Optional<List<GiftCard>> findGiftCardByValueAndCompany(int value, String companyName);
 }

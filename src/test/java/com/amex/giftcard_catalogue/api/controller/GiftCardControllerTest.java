@@ -1,7 +1,11 @@
 package com.amex.giftcard_catalogue.api.controller;
 
+import com.amex.giftcard_catalogue.api.controller.error_handling.CompanyNameNotFoundException;
+import com.amex.giftcard_catalogue.api.controller.error_handling.ErrorResponse;
+import com.amex.giftcard_catalogue.api.controller.error_handling.GiftCardNotFoundException;
 import com.amex.giftcard_catalogue.api.model.GiftCard;
 import com.amex.giftcard_catalogue.service.GiftCardService;
+import com.amex.giftcard_catalogue.utils.TestUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,10 +16,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.NoSuchElementException;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
+import static com.amex.giftcard_catalogue.utils.TestUtils.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -25,20 +33,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ExtendWith(MockitoExtension.class)
 class GiftCardControllerTest {
-
-    private static final UUID GIFT_CARD_ID = UUID.fromString("cf02dd1b-33ee-4c8d-8303-f32d35b407ba");
-    private static final int VALUE = 1000;
-    private static final String COMPANY_NAME = "Disney";
-
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private ObjectMapper objectMapper;
-
     @MockBean
     private GiftCardService giftCardService;
-
     @InjectMocks
     private GiftCardController controller;
 
@@ -62,44 +62,62 @@ class GiftCardControllerTest {
 
     }
 
-
     @Test
-    public void getById_shouldThrowExceptionWithInvalidId_() throws Exception {
+    public void getById_shouldThrowExceptionWithInvalidId_404() throws Exception {
         //Given
-        UUID id = UUID.randomUUID();
+        UUID id = UUID.fromString("39942cdc-a568-43ed-9a54-b64eb207c103");
 
         //When
-        when(giftCardService.getGiftCardById(id)).thenThrow(NoSuchElementException.class);
+        when(giftCardService.getGiftCardById(id)).thenThrow(new GiftCardNotFoundException(id.toString()));
 
         // Mock Rest Call
-        mockMvc.perform(get("/gift_cards/" + id))
-                .andExpect(status().isNotFound());
+        MvcResult result = mockMvc.perform(get("/gift_cards/" + id))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        ErrorResponse errorResponse = objectMapper.readValue(responseBody, ErrorResponse.class);
+        assertEquals("Gift card not found with ID " + id, errorResponse.getMessage());
     }
 
+    @Test
+    public void getByQuery_shouldReturnSingleGiftCardForValidQuery_200() throws Exception {
+
+        GiftCard expectedResponse = new GiftCard(GIFT_CARD_ID, COMPANY_NAME_1, VALUE, 100000);
+        String expectedJson = TestUtils.toJson(Collections.singletonList(expectedResponse));
+
+        when(giftCardService.getGiftCardByValueAndCompanyName(eq(VALUE), eq(COMPANY_NAME_1)))
+                .thenReturn(List.of(expectedResponse));
+
+        mockMvc.perform(get("/gift_cards")
+                        .param("value", "1000")
+                        .param("companyName", "Disney"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(expectedJson));
+
+    }
 
     @Test
-    public void getByQuery_shouldReturnGiftCardForValidQuery() throws Exception {
+    public void getByQuery_shouldReturnMultipleGiftCardsForValidQuery_200() throws Exception {
 
-        GiftCard expectedResponse = new GiftCard(GIFT_CARD_ID, COMPANY_NAME, VALUE, 100000);
+        List<GiftCard> expectedResponse = TestUtils.buildMultipleGiftCard();
+        String expectedJson = TestUtils.toJson(expectedResponse);
 
-        String jsonString = "{\"id\":\"" + expectedResponse.getId() + "\",\"company_name\":\"" + expectedResponse.getCompany_name() + "\",\"value\":" + expectedResponse.getValue() + ",\"points_cost\":" + expectedResponse.getPoints_cost() + "}";
-
-
-        when(giftCardService.getGiftCardByValueAndCompanyName(eq(VALUE), eq(COMPANY_NAME)))
+        when(giftCardService.getGiftCardByValueAndCompanyName(eq(VALUE), eq(COMPANY_NAME_1)))
                 .thenReturn(expectedResponse);
 
         mockMvc.perform(get("/gift_cards")
                         .param("value", "1000")
                         .param("companyName", "Disney"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(jsonString));
+                .andExpect(content().json(expectedJson));
 
     }
 
     @Test
-    public void shouldReturnNotFoundForInvalidQuery() throws Exception {
-        when(giftCardService.getGiftCardByValueAndCompanyName(eq(VALUE), eq(COMPANY_NAME)))
-                .thenThrow(NoSuchElementException.class);
+    public void shouldReturnNotFoundForInvalidQuery_400() throws Exception {
+        when(giftCardService.getGiftCardByValueAndCompanyName(eq(VALUE), eq(COMPANY_NAME_1)))
+                .thenThrow(CompanyNameNotFoundException.class);
 
         mockMvc.perform(get("/gift_cards")
                         .param("value", "1000")
@@ -107,8 +125,31 @@ class GiftCardControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    private GiftCard createGiftCard() {
-        return new GiftCard(GIFT_CARD_ID, COMPANY_NAME, VALUE, 100000);
+    @Test
+    public void shouldReturnBadRequestForInvalidCompanyNameParam_400() throws Exception {
+
+        MvcResult result = mockMvc.perform(get("/gift_cards")
+                        .param("value", "1000")
+                        .param("company-name", "Disney"))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        ErrorResponse errorResponse = objectMapper.readValue(responseBody, ErrorResponse.class);
+        assertEquals("Required request parameter 'companyName' is not present", errorResponse.getMessage());
+    }
+
+    @Test
+    public void shouldReturnBadRequestForInvalidValueParam_400() throws Exception {
+
+        MvcResult result = mockMvc.perform(get("/gift_cards")
+                        .param("values", "1000"))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        ErrorResponse errorResponse = objectMapper.readValue(responseBody, ErrorResponse.class);
+        assertEquals("Required request parameter 'value' is not present", errorResponse.getMessage());
     }
 
 }
