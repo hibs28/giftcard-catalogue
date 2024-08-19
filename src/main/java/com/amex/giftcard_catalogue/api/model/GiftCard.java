@@ -1,38 +1,56 @@
 package com.amex.giftcard_catalogue.api.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.UUIDSerializer;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
+
 @Entity
-@Table( name = "giftcard")
+@Table(name = "giftcard")
 public class GiftCard {
 
     @Id
     @UuidGenerator(style = UuidGenerator.Style.RANDOM)
     public UUID id;
-    public String company_name;
-    public int value;
-    public int points_cost;
 
-    public GiftCard(UUID id, String company_name, int value, int points_cost) {
+    @Column(nullable = false, name = "company_name")
+    @NotBlank
+    public String companyName;
+
+    @NotNull
+    public int value;
+
+    @Column(nullable = false, name = "points_cost")
+    @NotNull
+    public int pointsCost;
+
+    //GET
+    public GiftCard(UUID id, String companyName, int value, int pointsCost) {
         this.id = id;
-        this.company_name = company_name;
+        this.companyName = companyName;
         this.value = value;
-        this.points_cost = points_cost;
+        this.pointsCost = pointsCost;
     }
 
-    public GiftCard(String company_name, int value, int points_cost) {
-        this.company_name = company_name;
+    //POST
+    public GiftCard(String companyName, int value, int pointsCost) {
+        this.companyName = companyName;
         this.value = value;
-        this.points_cost = points_cost;
+        this.pointsCost = pointsCost;
     }
 
     public GiftCard() {
     }
 
+    @JsonSerialize(using = UUIDSerializer.class)
     public UUID getId() {
         return id;
     }
@@ -41,12 +59,14 @@ public class GiftCard {
         this.id = id;
     }
 
-    public String getCompany_name() {
-        return company_name;
+
+    public String getCompanyName() {
+        return companyName;
     }
 
-    public void setCompany_name(String company_name) {
-        this.company_name = company_name;
+    @JsonProperty("company_name")
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
     }
 
     public int getValue() {
@@ -57,21 +77,23 @@ public class GiftCard {
         this.value = value;
     }
 
-    public int getPoints_cost() {
-        return points_cost;
+    public int getPointsCost() {
+        return pointsCost;
     }
 
-    public void setPoints_cost(int points_cost) {
-        this.points_cost = points_cost;
+    @JsonProperty("points_cost")
+
+    public void setPointsCost(int pointsCost) {
+        this.pointsCost = pointsCost;
     }
 
     @Override
     public String toString() {
         return "GiftCard{" +
                 "id=" + id +
-                ", company_name='" + company_name + '\'' +
+                ", company_name='" + companyName + '\'' +
                 ", value=" + value +
-                ", points_cost=" + points_cost +
+                ", points_cost=" + pointsCost +
                 '}';
     }
 }

@@ -1,7 +1,12 @@
 package com.amex.giftcard_catalogue.service;
 
 import com.amex.giftcard_catalogue.api.GiftCardRepository;
+import com.amex.giftcard_catalogue.api.controller.error_handling.CompanyNameNotFoundException;
+import com.amex.giftcard_catalogue.api.controller.error_handling.GiftCardNotFoundException;
+import com.amex.giftcard_catalogue.api.controller.error_handling.GiftCardValueNotFoundException;
 import com.amex.giftcard_catalogue.api.model.GiftCard;
+import com.amex.giftcard_catalogue.api.model.GiftCardRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,19 +22,23 @@ public class GiftCardService {
         this.giftCardRepository = giftCardRepository;
     }
 
-    public List<GiftCard> getGiftCards() {
-        return giftCardRepository.findAll();
+    public GiftCard getGiftCardById(UUID id) {
+        return giftCardRepository.findGiftCardById(id).orElseThrow(() -> new GiftCardNotFoundException(id.toString()));
     }
 
-    private List<GiftCard> createGiftCardList() {
-        return List.of(
-                new GiftCard(UUID.fromString("af7c1fe6-d669-414e-b066-e9733f0de7a8"), "Disney", 100, 2000),
-                new GiftCard(UUID.fromString("08c71152-c552-42e7-b094-f510ff44e9cb"), "Airbnb", 60, 150),
-                new GiftCard(UUID.fromString("c558a80a-f319-4c10-95d4-4282ef745b4b"), "Hotels.com", 99, 75),
-                new GiftCard(UUID.fromString("1ad1fccc-d279-46a0-8980-1d91afd6ba67"), "Adidas", 300, 8000)
-        );
+    public List<GiftCard> getGiftCardByValueAndCompanyName(int value, String companyName) {
+        if (!giftCardRepository.existsByCompanyName(companyName)) {
+            throw new CompanyNameNotFoundException(companyName);
+        }
+        return giftCardRepository.findGiftCardByValueAndCompany(value, companyName)
+                .filter(list -> !list.isEmpty())
+                .orElseThrow(() -> new GiftCardValueNotFoundException(value, companyName));
     }
 
+    public GiftCard createGiftCard(@Valid GiftCardRequest giftCardRequest) throws IllegalStateException {
+        GiftCard giftCard = new GiftCard(giftCardRequest.getCompanyName(), giftCardRequest.getValue(), giftCardRequest.getPointsCost());
+        return giftCardRepository.save(giftCard);
+    }
     public void removeGiftCard(UUID id) {
         if(!giftCardRepository.existsById(id)) {
 
