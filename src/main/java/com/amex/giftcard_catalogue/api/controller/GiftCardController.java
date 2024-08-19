@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @RestController
@@ -19,23 +20,25 @@ public class GiftCardController {
         this.giftCardService = giftCardService;
     }
 
-//    @GetMapping
-//    public List<GiftCard> getAll() {
-//        return giftCardService.getGiftCards();
-//    }
-
     @GetMapping(value = "/{id}")
     public ResponseEntity<GiftCard> getById(@PathVariable(value = "id") UUID id) {
-        GiftCard response = giftCardService.getGiftCardById(id);
-        return ResponseEntity.ok(response);
+        try {
+            GiftCard response = giftCardService.getGiftCardById(id);
+            return ResponseEntity.ok(response);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
-
 
     @GetMapping
     public ResponseEntity<GiftCard> getByValueAndCompanyName(@RequestParam(value = "value") int value,
-                                             @RequestParam(value = "companyName") String companyName) {
-        GiftCard response = giftCardService.getGiftCardByValueAndCompanyName(value, companyName);
-        return ResponseEntity.ok(response);
+                                                             @RequestParam(value = "companyName") String companyName) {
+        try {
+            GiftCard response = giftCardService.getGiftCardByValueAndCompanyName(value, companyName);
+            return ResponseEntity.ok(response);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
 }
