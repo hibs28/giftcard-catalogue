@@ -15,14 +15,15 @@ public class GiftCardConfig {
     CommandLineRunner commandLineRunner(
             GiftCardRepository repository) {
         return args -> {
-           GiftCard giftCard1 = new GiftCard("Disney", 100, 2000);
-           GiftCard giftCard2 = new GiftCard("Airbnb", 60, 150);
-           GiftCard giftCard3 = new GiftCard("Hotels.com", 99, 75);
-           GiftCard giftCard4 = new GiftCard( "Adidas", 300, 8000);
+            GiftCard giftCard1 = new GiftCard("Disney", 100, 2000);
+            GiftCard giftCard2 = new GiftCard("Airbnb", 60, 150);
+            GiftCard giftCard3 = new GiftCard("Hotels.com", 99, 75);
+            GiftCard giftCard4 = new GiftCard("Adidas", 300, 8000);
+            GiftCard giftCard5 = new GiftCard("Hotels.com", 99, 75);
 
-           repository.saveAll(List.of(
-                   giftCard1, giftCard2, giftCard3, giftCard4
-           ));
+            repository.saveAll(List.of(
+                    giftCard1, giftCard2, giftCard3, giftCard4, giftCard5
+            ));
 
         };
     }

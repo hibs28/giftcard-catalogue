@@ -4,11 +4,15 @@ import com.amex.giftcard_catalogue.api.model.GiftCard;
 import com.amex.giftcard_catalogue.api.model.GiftCardRequest;
 import com.amex.giftcard_catalogue.service.GiftCardService;
 import jakarta.validation.Valid;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 
 @RestController
 @RequestMapping(path = "gift_cards")
@@ -21,9 +25,23 @@ public class GiftCardController {
         this.giftCardService = giftCardService;
     }
 
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<GiftCard> getById(@PathVariable(value = "id") UUID id) {
+        GiftCard response = giftCardService.getGiftCardById(id);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping
-    public List<GiftCard> getAll() {
-        return giftCardService.getGiftCards();
+    public ResponseEntity<List<GiftCard>> getByValueAndCompanyName(@RequestParam(value = "value") int value,
+                                                                   @RequestParam(value = "companyName") String companyName) throws BadRequestException {
+        if (companyName.isEmpty()) {
+            throw new BadRequestException("companyName must be provided");
+        }
+        if (value < 5) {
+            throw new BadRequestException("Gift card value must be greater than 5");
+        }
+        List<GiftCard> response = giftCardService.getGiftCardByValueAndCompanyName(value, companyName);
+        return ResponseEntity.ok(response);
     }
 
 
