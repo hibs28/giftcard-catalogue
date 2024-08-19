@@ -4,17 +4,20 @@ import com.amex.giftcard_catalogue.api.controller.error_handling.CompanyNameNotF
 import com.amex.giftcard_catalogue.api.controller.error_handling.ErrorResponse;
 import com.amex.giftcard_catalogue.api.controller.error_handling.GiftCardNotFoundException;
 import com.amex.giftcard_catalogue.api.model.GiftCard;
+import com.amex.giftcard_catalogue.api.model.GiftCardRequest;
 import com.amex.giftcard_catalogue.service.GiftCardService;
 import com.amex.giftcard_catalogue.utils.TestUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -24,10 +27,15 @@ import java.util.UUID;
 
 import static com.amex.giftcard_catalogue.utils.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -115,7 +123,7 @@ class GiftCardControllerTest {
     }
 
     @Test
-    public void shouldReturnNotFoundForInvalidQuery_400() throws Exception {
+    public void getByQuery_shouldReturnNotFoundForInvalidQuery_400() throws Exception {
         when(giftCardService.getGiftCardByValueAndCompanyName(eq(VALUE), eq(COMPANY_NAME_1)))
                 .thenThrow(CompanyNameNotFoundException.class);
 
@@ -126,7 +134,7 @@ class GiftCardControllerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestForInvalidCompanyNameParam_400() throws Exception {
+    public void getByQuery_shouldReturnBadRequestForInvalidCompanyNameParam_400() throws Exception {
 
         MvcResult result = mockMvc.perform(get("/gift_cards")
                         .param("value", "1000")
@@ -140,7 +148,7 @@ class GiftCardControllerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestForInvalidValueParam_400() throws Exception {
+    public void getByQuery_shouldReturnBadRequestForInvalidValueParam_400() throws Exception {
 
         MvcResult result = mockMvc.perform(get("/gift_cards")
                         .param("values", "1000"))
@@ -150,6 +158,47 @@ class GiftCardControllerTest {
         String responseBody = result.getResponse().getContentAsString();
         ErrorResponse errorResponse = objectMapper.readValue(responseBody, ErrorResponse.class);
         assertEquals("Required request parameter 'value' is not present", errorResponse.getMessage());
+    }
+
+    @Test
+    public void postNewGiftCard_shouldCreateNewGiftCard_200() throws Exception {
+        //GIVEN
+        GiftCardRequest giftCardRequest = new GiftCardRequest("Test Gift Card", 150, 600);
+
+        UUID id = UUID.fromString("cf02dd1b-33ee-4c8d-8303-f32d35b407ba");
+        GiftCard expectedGiftCard = new GiftCard(id, "Test Gift Card", 150, 600);
+
+        String request = TestUtils.toJson(buildPostRequest());
+        String expectedResponse = TestUtils.toJson(expectedGiftCard);
+
+        //When
+        when(giftCardService.createGiftCard(any(GiftCardRequest.class))).thenReturn(expectedGiftCard);
+
+        // Mock Rest Call
+        mockMvc.perform(post("/gift_cards")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andDo(print()) // print the response for debugging
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.company_name").value("Test Gift Card"))
+                .andExpect(jsonPath("$.value").value(150))
+                .andExpect(jsonPath("$.points_cost").value(600));
+
+        verify(giftCardService, times(1)).createGiftCard(Mockito.any(GiftCardRequest.class));
+    }
+
+    @Test
+    public void postNewGiftCard_InvalidRequestShouldReturnBadRequest_400() throws Exception {
+        GiftCardRequest invalidRequest = new GiftCardRequest(null, 0, 0);
+        mockMvc.perform(post("/gift_cards")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    private GiftCardRequest buildPostRequest() {
+        return new GiftCardRequest("Test Gift Card", 150, 600);
     }
 
 }

@@ -5,6 +5,8 @@ import com.amex.giftcard_catalogue.api.controller.error_handling.CompanyNameNotF
 import com.amex.giftcard_catalogue.api.controller.error_handling.GiftCardNotFoundException;
 import com.amex.giftcard_catalogue.api.controller.error_handling.GiftCardValueNotFoundException;
 import com.amex.giftcard_catalogue.api.model.GiftCard;
+import com.amex.giftcard_catalogue.api.model.GiftCardRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,5 +33,10 @@ public class GiftCardService {
         return giftCardRepository.findGiftCardByValueAndCompany(value, companyName)
                 .filter(list -> !list.isEmpty())
                 .orElseThrow(() -> new GiftCardValueNotFoundException(value, companyName));
+    }
+
+    public GiftCard createGiftCard(@Valid GiftCardRequest giftCardRequest) throws IllegalStateException {
+        GiftCard giftCard = new GiftCard(giftCardRequest.getCompanyName(), giftCardRequest.getValue(), giftCardRequest.getPointsCost());
+        return giftCardRepository.save(giftCard);
     }
 }

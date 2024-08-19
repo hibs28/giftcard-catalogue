@@ -1,7 +1,9 @@
 package com.amex.giftcard_catalogue.api.controller;
 
 import com.amex.giftcard_catalogue.api.model.GiftCard;
+import com.amex.giftcard_catalogue.api.model.GiftCardRequest;
 import com.amex.giftcard_catalogue.service.GiftCardService;
+import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 
 @RestController
 @RequestMapping(path = "gift_cards")
@@ -37,6 +41,13 @@ public class GiftCardController {
             throw new BadRequestException("Gift card value must be greater than 5");
         }
         List<GiftCard> response = giftCardService.getGiftCardByValueAndCompanyName(value, companyName);
+        return ResponseEntity.ok(response);
+    }
+
+
+    @PostMapping
+    public ResponseEntity<GiftCard> createGiftCard(@RequestBody @Valid GiftCardRequest giftCardRequest) {
+        GiftCard response = giftCardService.createGiftCard(giftCardRequest);
         return ResponseEntity.ok(response);
     }
 

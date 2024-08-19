@@ -1,10 +1,14 @@
 package com.amex.giftcard_catalogue.api.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.UUIDSerializer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
@@ -16,12 +20,19 @@ public class GiftCard {
     @Id
     @UuidGenerator(style = UuidGenerator.Style.RANDOM)
     public UUID id;
+
     @Column(nullable = false, name = "company_name")
+    @NotBlank
     public String companyName;
+
+    @NotNull
     public int value;
+
     @Column(nullable = false, name = "points_cost")
+    @NotNull
     public int pointsCost;
 
+    //GET
     public GiftCard(UUID id, String companyName, int value, int pointsCost) {
         this.id = id;
         this.companyName = companyName;
@@ -29,6 +40,7 @@ public class GiftCard {
         this.pointsCost = pointsCost;
     }
 
+    //POST
     public GiftCard(String companyName, int value, int pointsCost) {
         this.companyName = companyName;
         this.value = value;
@@ -38,6 +50,7 @@ public class GiftCard {
     public GiftCard() {
     }
 
+    @JsonSerialize(using = UUIDSerializer.class)
     public UUID getId() {
         return id;
     }
