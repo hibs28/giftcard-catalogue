@@ -22,6 +22,10 @@ public class GiftCardService {
         this.giftCardRepository = giftCardRepository;
     }
 
+    public List<GiftCard> getAllGiftCards() {
+        return giftCardRepository.findAll();
+    }
+
     public GiftCard getGiftCardById(UUID id) {
         return giftCardRepository.findGiftCardById(id).orElseThrow(() -> new GiftCardNotFoundException(id.toString()));
     }

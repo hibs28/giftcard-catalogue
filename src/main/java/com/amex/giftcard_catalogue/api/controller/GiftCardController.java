@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
-
 @RestController
 @RequestMapping(path = "gift_cards")
 public class GiftCardController {
@@ -32,14 +30,22 @@ public class GiftCardController {
     }
 
     @GetMapping
-    public ResponseEntity<List<GiftCard>> getByValueAndCompanyName(@RequestParam(value = "value") int value,
-                                                                   @RequestParam(value = "companyName") String companyName) throws BadRequestException {
-        if (companyName.isEmpty()) {
+    public ResponseEntity<List<GiftCard>> getGiftCards(@RequestParam(value = "value", required = false) Integer value,
+                                                       @RequestParam(value = "companyName", required = false) String companyName) throws BadRequestException {
+
+        if (value == null && companyName == null) {
+            List<GiftCard> allGiftCards = giftCardService.getAllGiftCards();
+            return ResponseEntity.ok(allGiftCards);
+        }
+
+        if (value == null || companyName == null || companyName.isEmpty()) {
             throw new BadRequestException("companyName must be provided");
         }
+
         if (value < 5) {
             throw new BadRequestException("Gift card value must be greater than 5");
         }
+
         List<GiftCard> response = giftCardService.getGiftCardByValueAndCompanyName(value, companyName);
         return ResponseEntity.ok(response);
     }

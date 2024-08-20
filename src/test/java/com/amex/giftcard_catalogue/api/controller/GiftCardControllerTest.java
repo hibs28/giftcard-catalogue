@@ -33,9 +33,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -49,6 +47,37 @@ class GiftCardControllerTest {
     private GiftCardService giftCardService;
     @InjectMocks
     private GiftCardController controller;
+
+    @Test
+    public void getAll_shouldReturnAllExistingGiftCard() throws Exception {
+        // GIVEN
+        List<GiftCard> expectedGiftCards = TestUtils.buildMultipleGiftCard();
+        String expectedJson = TestUtils.toJson(expectedGiftCards);
+
+        //WHEN
+        when(giftCardService.getAllGiftCards()).thenReturn(expectedGiftCards);
+
+        //THEN
+        mockMvc.perform(get("/gift_cards"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(expectedJson));
+
+        verify(giftCardService, times(1)).getAllGiftCards();
+    }
+
+    @Test
+    public void getAll_shouldReturnErrorIfNoGiftCards() throws Exception {
+        //WHEN
+        when(giftCardService.getAllGiftCards()).thenReturn(Collections.emptyList());
+
+        //THEN
+        mockMvc.perform(get("/gift_cards"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
+
+        verify(giftCardService, times(1)).getAllGiftCards();
+    }
 
 
     @Test
