@@ -23,7 +23,7 @@ public class GiftCardService {
     }
 
     public GiftCard getGiftCardById(UUID id) {
-        return giftCardRepository.findGiftCardById(id).orElseThrow(() -> new GiftCardNotFoundException(id.toString()));
+        return giftCardRepository.findGiftCardById(id).orElseThrow(() -> new GiftCardNotFoundException(id));
     }
 
     public List<GiftCard> getGiftCardByValueAndCompanyName(int value, String companyName) {
@@ -36,13 +36,15 @@ public class GiftCardService {
     }
 
     public GiftCard createGiftCard(@Valid GiftCardRequest giftCardRequest) throws IllegalStateException {
+        if (giftCardRequest == null || giftCardRequest.getValue() <= 5 || giftCardRequest.companyName == null) {
+            throw new IllegalStateException("Invalid gift card request");
+        }
         GiftCard giftCard = new GiftCard(giftCardRequest.getCompanyName(), giftCardRequest.getValue(), giftCardRequest.getPointsCost());
         return giftCardRepository.save(giftCard);
     }
     public void removeGiftCard(UUID id) {
-        if(!giftCardRepository.existsById(id)) {
-
-            throw new IllegalStateException("Gift Card with id " + id + " does not exist");
+        if (!giftCardRepository.existsById(id)) {
+            throw new GiftCardNotFoundException(id);
         }
         giftCardRepository.deleteById(id);
     }

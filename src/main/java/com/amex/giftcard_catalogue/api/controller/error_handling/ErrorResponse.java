@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ErrorResponse {
-    private int status;
-    private String message;
+    private final int status;
+    private final String message;
 
     @JsonCreator
     public ErrorResponse(@JsonProperty("status") int status, @JsonProperty("message") String message) {
