@@ -223,10 +223,20 @@ To exit the psql command-line interface, simply type:
 \q
 ```
 
+## Assumptions
+
+
+* Gift card value is always a whole number same as points_cost.
+* The minimum value for a gift card is £5.
+* Customers can not create empty gift cards.
+
+
 ## Improvements
 
 
 * Use enums for the company name instead of a String.
 * Add more exception handling when using invalid parameters.
 * Add a timestamp to when the gift cards are created.
-* Fix the naming convention for giftCard as it was inconsistent.
+* Fix the naming convention for gift card as it was inconsistent.
+* Change the value to BigDecimal if there is an option for customers to enter their gift card value. (Keeps it consistent as currency is used as BigDecimal)
+* Validation for minimum/maximum points. 
