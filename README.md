@@ -27,7 +27,7 @@ CREATE DATABASE gift_card_catalogue;
 3. Update your PostgreSQL credentials in `src/main/resources/application.properties`:
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/gift_card_catalogue
+spring.datasource.url=jdbc:postgresql://localhost:5432/giftcard
 spring.datasource.username=your_username
 spring.datasource.password=your_password
 ```
