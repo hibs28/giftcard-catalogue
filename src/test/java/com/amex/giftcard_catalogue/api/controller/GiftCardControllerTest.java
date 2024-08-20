@@ -30,10 +30,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -68,6 +70,7 @@ class GiftCardControllerTest {
                 .andExpect(jsonPath("$.value").value(50))
                 .andExpect(jsonPath("$.points_cost").value(10000));
 
+        verify(giftCardService, times(1)).getGiftCardById(id);
     }
 
     @Test
@@ -76,7 +79,7 @@ class GiftCardControllerTest {
         UUID id = UUID.fromString("39942cdc-a568-43ed-9a54-b64eb207c103");
 
         //When
-        when(giftCardService.getGiftCardById(id)).thenThrow(new GiftCardNotFoundException(id.toString()));
+        when(giftCardService.getGiftCardById(id)).thenThrow(new GiftCardNotFoundException(id));
 
         // Mock Rest Call
         MvcResult result = mockMvc.perform(get("/gift_cards/" + id))
@@ -86,6 +89,8 @@ class GiftCardControllerTest {
         String responseBody = result.getResponse().getContentAsString();
         ErrorResponse errorResponse = objectMapper.readValue(responseBody, ErrorResponse.class);
         assertEquals("Gift card not found with ID " + id, errorResponse.getMessage());
+
+        verify(giftCardService, times(1)).getGiftCardById(id);
     }
 
     @Test
@@ -103,6 +108,7 @@ class GiftCardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json(expectedJson));
 
+        verify(giftCardService, times(1)).getGiftCardByValueAndCompanyName(VALUE, COMPANY_NAME_1);
     }
 
     @Test
@@ -120,6 +126,7 @@ class GiftCardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json(expectedJson));
 
+        verify(giftCardService, times(1)).getGiftCardByValueAndCompanyName(VALUE, COMPANY_NAME_1);
     }
 
     @Test
@@ -131,6 +138,9 @@ class GiftCardControllerTest {
                         .param("value", "1000")
                         .param("companyName", "Disney"))
                 .andExpect(status().isNotFound());
+
+        verify(giftCardService, times(1)).getGiftCardByValueAndCompanyName(VALUE, COMPANY_NAME_1);
+
     }
 
     @Test
@@ -145,6 +155,8 @@ class GiftCardControllerTest {
         String responseBody = result.getResponse().getContentAsString();
         ErrorResponse errorResponse = objectMapper.readValue(responseBody, ErrorResponse.class);
         assertEquals("Required request parameter 'companyName' is not present", errorResponse.getMessage());
+
+        verifyNoInteractions(giftCardService);
     }
 
     @Test
@@ -158,18 +170,17 @@ class GiftCardControllerTest {
         String responseBody = result.getResponse().getContentAsString();
         ErrorResponse errorResponse = objectMapper.readValue(responseBody, ErrorResponse.class);
         assertEquals("Required request parameter 'value' is not present", errorResponse.getMessage());
+
+        verifyNoInteractions(giftCardService);
     }
 
     @Test
     public void postNewGiftCard_shouldCreateNewGiftCard_200() throws Exception {
         //GIVEN
-        GiftCardRequest giftCardRequest = new GiftCardRequest("Test Gift Card", 150, 600);
-
         UUID id = UUID.fromString("cf02dd1b-33ee-4c8d-8303-f32d35b407ba");
         GiftCard expectedGiftCard = new GiftCard(id, "Test Gift Card", 150, 600);
 
         String request = TestUtils.toJson(buildPostRequest());
-        String expectedResponse = TestUtils.toJson(expectedGiftCard);
 
         //When
         when(giftCardService.createGiftCard(any(GiftCardRequest.class))).thenReturn(expectedGiftCard);
@@ -195,6 +206,49 @@ class GiftCardControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(giftCardService);
+    }
+
+    @Test
+    public void deleteById_shouldReturnHeaderConfirmationMessage_204() throws Exception {
+        //Given
+        UUID id = UUID.randomUUID();
+
+        //When
+        Mockito.doNothing().when(giftCardService).removeGiftCard(id);
+
+        // Mock Rest Call
+        mockMvc.perform(delete("/gift_cards/" + id))
+                .andExpect(status().isNoContent())
+                .andExpect(header().string("message", "Gift card with ID " + id + " deleted successfully"));
+
+        verify(giftCardService, times(1)).removeGiftCard(id);
+    }
+
+    @Test
+    public void deleteById_shouldThrowExceptionWitNonExistingId_404() throws Exception {
+        //Given
+        UUID id = UUID.randomUUID();
+
+        // Mock Rest Call
+        mockMvc.perform(delete("/gift_cards/" + id))
+                .andExpect(status().isNotFound())
+                .andExpect(header().string("Error-Message", "Gift card not found with id " + id));
+
+
+        verify(giftCardService, times(1)).removeGiftCard(id);
+    }
+
+    @Test
+    public void deleteById_shouldThrowExceptionWitInvalId_404() throws Exception {
+
+        // Mock Rest Call
+        mockMvc.perform(delete("/gift_cards/" + "invalidID"))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        verifyNoInteractions(giftCardService);
     }
 
     private GiftCardRequest buildPostRequest() {
