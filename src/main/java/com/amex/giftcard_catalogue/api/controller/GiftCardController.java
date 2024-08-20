@@ -4,7 +4,6 @@ import com.amex.giftcard_catalogue.api.model.GiftCard;
 import com.amex.giftcard_catalogue.api.model.GiftCardRequest;
 import com.amex.giftcard_catalogue.service.GiftCardService;
 import jakarta.validation.Valid;
-import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,15 +36,10 @@ public class GiftCardController {
     }
 
     @GetMapping
-    public ResponseEntity<List<GiftCard>> getByValueAndCompanyName(@RequestParam(value = "value") int value,
-                                                                   @RequestParam(value = "companyName") String companyName) throws BadRequestException {
-        if (companyName.isEmpty()) {
-            throw new BadRequestException("companyName must be provided");
-        }
-        if (value < 5) {
-            throw new BadRequestException("Gift card value must be greater than 5");
-        }
-        List<GiftCard> response = giftCardService.getGiftCardByValueAndCompanyName(value, companyName);
+    public ResponseEntity<List<GiftCard>> getGiftCards(@RequestParam(value = "value", required = false) Integer value,
+                                                       @RequestParam(value = "companyName", required = false) String companyName) {
+
+        List<GiftCard> response = giftCardService.getGiftCards(value, companyName);
         return ResponseEntity.ok(response);
     }
 

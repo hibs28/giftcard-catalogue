@@ -15,6 +15,12 @@ public interface GiftCardRepository extends JpaRepository<GiftCard, UUID> {
     @Query("select g From GiftCard g where g.id = ?1")
     Optional<GiftCard> findGiftCardById(UUID id);
 
+    @Query("select g From GiftCard g where g.companyName = ?1")
+    Optional<List<GiftCard>> findGiftCardByCompanyName(String companyName);
+
+    @Query("select g From GiftCard g where g.value = ?1")
+    Optional<List<GiftCard>> findGiftCardByValue(int companyName);
+
     @Query("select g From GiftCard g where g.value = ?1 and g.companyName = ?2")
     Optional<List<GiftCard>> findGiftCardByValueAndCompany(int value, String companyName);
 }

@@ -4,6 +4,7 @@ import com.amex.giftcard_catalogue.api.GiftCardRepository;
 import com.amex.giftcard_catalogue.api.controller.error_handling.CompanyNameNotFoundException;
 import com.amex.giftcard_catalogue.api.controller.error_handling.GiftCardNotFoundException;
 import com.amex.giftcard_catalogue.api.controller.error_handling.GiftCardValueNotFoundException;
+import com.amex.giftcard_catalogue.api.controller.error_handling.ValueNotFoundException;
 import com.amex.giftcard_catalogue.api.model.GiftCard;
 import com.amex.giftcard_catalogue.api.model.GiftCardRequest;
 import jakarta.validation.Valid;
@@ -22,8 +23,36 @@ public class GiftCardService {
         this.giftCardRepository = giftCardRepository;
     }
 
+    public List<GiftCard> getGiftCards(Integer value, String companyName) {
+        if (value != null && companyName != null) {
+            return getGiftCardByValueAndCompanyName(value, companyName);
+        } else if (value != null) {
+            return getGiftCardByValue(value);
+        } else if (companyName != null) {
+            return getGiftCardByCompanyName(companyName);
+        } else {
+            return getAllGiftCards();
+        }
+    }
+
+    public List<GiftCard> getAllGiftCards() {
+        return giftCardRepository.findAll();
+    }
+
     public GiftCard getGiftCardById(UUID id) {
         return giftCardRepository.findGiftCardById(id).orElseThrow(() -> new GiftCardNotFoundException(id));
+    }
+
+    public List<GiftCard> getGiftCardByCompanyName(String companyName) {
+        return giftCardRepository.findGiftCardByCompanyName(companyName)
+                .filter(list -> !list.isEmpty())
+                .orElseThrow(() -> new CompanyNameNotFoundException(companyName));
+    }
+
+    public List<GiftCard> getGiftCardByValue(int value) {
+        return giftCardRepository.findGiftCardByValue(value)
+                .filter(list -> !list.isEmpty())
+                .orElseThrow(() -> new ValueNotFoundException(value));
     }
 
     public List<GiftCard> getGiftCardByValueAndCompanyName(int value, String companyName) {

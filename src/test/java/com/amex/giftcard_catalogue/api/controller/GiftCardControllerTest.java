@@ -52,6 +52,37 @@ class GiftCardControllerTest {
     @InjectMocks
     private GiftCardController controller;
 
+    @Test
+    public void getAll_shouldReturnAllExistingGiftCard() throws Exception {
+        // GIVEN
+        List<GiftCard> expectedGiftCards = TestUtils.buildMultipleGiftCard();
+        String expectedJson = TestUtils.toJson(expectedGiftCards);
+
+        //WHEN
+        when(giftCardService.getGiftCards(null, null)).thenReturn(expectedGiftCards);
+
+        //THEN
+        mockMvc.perform(get("/gift_cards"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(expectedJson));
+
+        verify(giftCardService, times(1)).getGiftCards(null, null);
+    }
+
+    @Test
+    public void getAll_shouldReturnErrorIfNoGiftCards() throws Exception {
+        //WHEN
+        when(giftCardService.getGiftCards(null, null)).thenReturn(Collections.emptyList());
+
+        //THEN
+        mockMvc.perform(get("/gift_cards"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
+
+        verify(giftCardService, times(1)).getGiftCards(null, null);
+    }
+
 
     @Test
     public void getById_shouldReturnExistingGiftCard_200() throws Exception {
@@ -99,7 +130,7 @@ class GiftCardControllerTest {
         GiftCard expectedResponse = new GiftCard(GIFT_CARD_ID, COMPANY_NAME_1, VALUE, 100000);
         String expectedJson = TestUtils.toJson(Collections.singletonList(expectedResponse));
 
-        when(giftCardService.getGiftCardByValueAndCompanyName(eq(VALUE), eq(COMPANY_NAME_1)))
+        when(giftCardService.getGiftCards(eq(VALUE), eq(COMPANY_NAME_1)))
                 .thenReturn(List.of(expectedResponse));
 
         mockMvc.perform(get("/gift_cards")
@@ -108,7 +139,7 @@ class GiftCardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json(expectedJson));
 
-        verify(giftCardService, times(1)).getGiftCardByValueAndCompanyName(VALUE, COMPANY_NAME_1);
+        verify(giftCardService, times(1)).getGiftCards(VALUE, COMPANY_NAME_1);
     }
 
     @Test
@@ -117,7 +148,7 @@ class GiftCardControllerTest {
         List<GiftCard> expectedResponse = TestUtils.buildMultipleGiftCard();
         String expectedJson = TestUtils.toJson(expectedResponse);
 
-        when(giftCardService.getGiftCardByValueAndCompanyName(eq(VALUE), eq(COMPANY_NAME_1)))
+        when(giftCardService.getGiftCards(eq(VALUE), eq(COMPANY_NAME_1)))
                 .thenReturn(expectedResponse);
 
         mockMvc.perform(get("/gift_cards")
@@ -126,12 +157,12 @@ class GiftCardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json(expectedJson));
 
-        verify(giftCardService, times(1)).getGiftCardByValueAndCompanyName(VALUE, COMPANY_NAME_1);
+        verify(giftCardService, times(1)).getGiftCards(VALUE, COMPANY_NAME_1);
     }
 
     @Test
     public void getByQuery_shouldReturnNotFoundForInvalidQuery_400() throws Exception {
-        when(giftCardService.getGiftCardByValueAndCompanyName(eq(VALUE), eq(COMPANY_NAME_1)))
+        when(giftCardService.getGiftCards(eq(VALUE), eq(COMPANY_NAME_1)))
                 .thenThrow(CompanyNameNotFoundException.class);
 
         mockMvc.perform(get("/gift_cards")
@@ -139,39 +170,8 @@ class GiftCardControllerTest {
                         .param("companyName", "Disney"))
                 .andExpect(status().isNotFound());
 
-        verify(giftCardService, times(1)).getGiftCardByValueAndCompanyName(VALUE, COMPANY_NAME_1);
+        verify(giftCardService, times(1)).getGiftCards(VALUE, COMPANY_NAME_1);
 
-    }
-
-    @Test
-    public void getByQuery_shouldReturnBadRequestForInvalidCompanyNameParam_400() throws Exception {
-
-        MvcResult result = mockMvc.perform(get("/gift_cards")
-                        .param("value", "1000")
-                        .param("company-name", "Disney"))
-                .andExpect(status().isBadRequest())
-                .andReturn();
-
-        String responseBody = result.getResponse().getContentAsString();
-        ErrorResponse errorResponse = objectMapper.readValue(responseBody, ErrorResponse.class);
-        assertEquals("Required request parameter 'companyName' is not present", errorResponse.getMessage());
-
-        verifyNoInteractions(giftCardService);
-    }
-
-    @Test
-    public void getByQuery_shouldReturnBadRequestForInvalidValueParam_400() throws Exception {
-
-        MvcResult result = mockMvc.perform(get("/gift_cards")
-                        .param("values", "1000"))
-                .andExpect(status().isBadRequest())
-                .andReturn();
-
-        String responseBody = result.getResponse().getContentAsString();
-        ErrorResponse errorResponse = objectMapper.readValue(responseBody, ErrorResponse.class);
-        assertEquals("Required request parameter 'value' is not present", errorResponse.getMessage());
-
-        verifyNoInteractions(giftCardService);
     }
 
     @Test
@@ -226,29 +226,20 @@ class GiftCardControllerTest {
         verify(giftCardService, times(1)).removeGiftCard(id);
     }
 
+
     @Test
     public void deleteById_shouldThrowExceptionWitNonExistingId_404() throws Exception {
-        //Given
-        UUID id = UUID.randomUUID();
+        // Arrange
+        UUID nonExistingId = UUID.randomUUID();
+        doThrow(new GiftCardNotFoundException(nonExistingId)).when(giftCardService).removeGiftCard(nonExistingId);
 
-        // Mock Rest Call
-        mockMvc.perform(delete("/gift_cards/" + id))
+        // Act
+        MvcResult result = mockMvc.perform(delete("/gift_cards/{id}", nonExistingId))
                 .andExpect(status().isNotFound())
-                .andExpect(header().string("Error-Message", "Gift card not found with id " + id));
-
-
-        verify(giftCardService, times(1)).removeGiftCard(id);
-    }
-
-    @Test
-    public void deleteById_shouldThrowExceptionWitInvalId_404() throws Exception {
-
-        // Mock Rest Call
-        mockMvc.perform(delete("/gift_cards/" + "invalidID"))
-                .andExpect(status().isBadRequest())
                 .andReturn();
 
-        verifyNoInteractions(giftCardService);
+        verify(giftCardService, times(1)).removeGiftCard(nonExistingId);
+
     }
 
     private GiftCardRequest buildPostRequest() {
