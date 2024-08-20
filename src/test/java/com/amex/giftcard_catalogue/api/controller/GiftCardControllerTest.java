@@ -229,11 +229,11 @@ class GiftCardControllerTest {
 
     @Test
     public void deleteById_shouldThrowExceptionWitNonExistingId_404() throws Exception {
-        // Arrange
+        // GIVEN
         UUID nonExistingId = UUID.randomUUID();
         doThrow(new GiftCardNotFoundException(nonExistingId)).when(giftCardService).removeGiftCard(nonExistingId);
 
-        // Act
+        // WHEN THEN
         MvcResult result = mockMvc.perform(delete("/gift_cards/{id}", nonExistingId))
                 .andExpect(status().isNotFound())
                 .andReturn();
