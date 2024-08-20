@@ -10,6 +10,7 @@ import java.util.UUID;
 
 public interface GiftCardRepository extends JpaRepository<GiftCard, UUID> {
     boolean existsByCompanyName(String name);
+    boolean existsById(UUID id);
 
     @Query("select g From GiftCard g where g.id = ?1")
     Optional<GiftCard> findGiftCardById(UUID id);

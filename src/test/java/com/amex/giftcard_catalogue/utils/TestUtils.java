@@ -3,8 +3,6 @@ package com.amex.giftcard_catalogue.utils;
 import com.amex.giftcard_catalogue.api.model.GiftCard;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ResourceLoader;
 
 import java.io.IOException;
 import java.io.InputStream;

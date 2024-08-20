@@ -25,19 +25,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static com.amex.giftcard_catalogue.utils.TestUtils.COMPANY_NAME_1;
-import static com.amex.giftcard_catalogue.utils.TestUtils.GIFT_CARD_ID;
-import static com.amex.giftcard_catalogue.utils.TestUtils.VALUE;
+import static com.amex.giftcard_catalogue.utils.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -101,6 +101,7 @@ class GiftCardControllerTest {
                 .andExpect(jsonPath("$.value").value(50))
                 .andExpect(jsonPath("$.points_cost").value(10000));
 
+        verify(giftCardService, times(1)).getGiftCardById(id);
     }
 
     @Test
@@ -109,7 +110,7 @@ class GiftCardControllerTest {
         UUID id = UUID.fromString("39942cdc-a568-43ed-9a54-b64eb207c103");
 
         //When
-        when(giftCardService.getGiftCardById(id)).thenThrow(new GiftCardNotFoundException(id.toString()));
+        when(giftCardService.getGiftCardById(id)).thenThrow(new GiftCardNotFoundException(id));
 
         // Mock Rest Call
         MvcResult result = mockMvc.perform(get("/gift_cards/" + id))
@@ -119,6 +120,8 @@ class GiftCardControllerTest {
         String responseBody = result.getResponse().getContentAsString();
         ErrorResponse errorResponse = objectMapper.readValue(responseBody, ErrorResponse.class);
         assertEquals("Gift card not found with ID " + id, errorResponse.getMessage());
+
+        verify(giftCardService, times(1)).getGiftCardById(id);
     }
 
     @Test
@@ -136,6 +139,7 @@ class GiftCardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json(expectedJson));
 
+        verify(giftCardService, times(1)).getGiftCards(VALUE, COMPANY_NAME_1);
     }
 
     @Test
@@ -153,6 +157,7 @@ class GiftCardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json(expectedJson));
 
+        verify(giftCardService, times(1)).getGiftCards(VALUE, COMPANY_NAME_1);
     }
 
     @Test
@@ -164,6 +169,9 @@ class GiftCardControllerTest {
                         .param("value", "1000")
                         .param("companyName", "Disney"))
                 .andExpect(status().isNotFound());
+
+        verify(giftCardService, times(1)).getGiftCards(VALUE, COMPANY_NAME_1);
+
     }
 
     @Test
@@ -198,6 +206,40 @@ class GiftCardControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(giftCardService);
+    }
+
+    @Test
+    public void deleteById_shouldReturnHeaderConfirmationMessage_204() throws Exception {
+        //Given
+        UUID id = UUID.randomUUID();
+
+        //When
+        Mockito.doNothing().when(giftCardService).removeGiftCard(id);
+
+        // Mock Rest Call
+        mockMvc.perform(delete("/gift_cards/" + id))
+                .andExpect(status().isNoContent())
+                .andExpect(header().string("message", "Gift card with ID " + id + " deleted successfully"));
+
+        verify(giftCardService, times(1)).removeGiftCard(id);
+    }
+
+
+    @Test
+    public void deleteById_shouldThrowExceptionWitNonExistingId_404() throws Exception {
+        // Arrange
+        UUID nonExistingId = UUID.randomUUID();
+        doThrow(new GiftCardNotFoundException(nonExistingId)).when(giftCardService).removeGiftCard(nonExistingId);
+
+        // Act
+        MvcResult result = mockMvc.perform(delete("/gift_cards/{id}", nonExistingId))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        verify(giftCardService, times(1)).removeGiftCard(nonExistingId);
+
     }
 
     private GiftCardRequest buildPostRequest() {
